@@ -8,48 +8,57 @@ from dash import dcc, html, Dash
 from dash.dependencies import Output, Input
 
 # IMPORTING AND MERGING THE DATA
-dfBasics = pd.read_csv('title.basics.tsv', sep='\t', header=0)
+# dfBasics = pd.read_csv('title.basics.tsv', sep='\t', header=0)
 # dfRegion = pd.read_csv('Downloads/title.akas.tsv', sep='\t', header=0)
-dfRatings = pd.read_csv('title.ratings.tsv', sep='\t', header=0)
+# dfRatings = pd.read_csv('title.ratings.tsv', sep='\t', header=0)
 
-dfTotal = pd.merge(dfBasics, dfRatings, on='tconst')
+# dfTotal = pd.merge(dfBasics, dfRatings, on='tconst')
 
 # LOADING MOVIES
-dfMovies = dfTotal.loc[dfTotal['titleType'] == 'movie']
-dfMovies.rename({'startYear': 'year'}, axis=1, inplace=True)
-dfMovies = dfMovies[dfMovies.runtimeMinutes != '\\N']
-dfMovies = dfMovies[dfMovies.genres != '\\N']
-dfMovies = dfMovies[dfMovies.year != '\\N']
-dfMovies = dfMovies[dfMovies['numVotes'].astype(int) >= 25000]
+# dfMovies = dfTotal.loc[dfTotal['titleType'] == 'movie']
+# dfMovies.rename({'startYear': 'year'}, axis=1, inplace=True)
+# dfMovies = dfMovies[dfMovies.runtimeMinutes != '\\N']
+# dfMovies = dfMovies[dfMovies.genres != '\\N']
+# dfMovies = dfMovies[dfMovies.year != '\\N']
+# dfMovies = dfMovies[dfMovies['numVotes'].astype(int) >= 25000]
 # Fixing movies so that the genres are split into different rows
-dfMovies.drop(['originalTitle'], axis=1, inplace=True)
-dfMovies.drop(['endYear'], axis=1, inplace=True)
-dfMovies.set_index(['tconst'], inplace=True)
+# dfMovies.drop(['originalTitle'], axis=1, inplace=True)
+# dfMovies.drop(['endYear'], axis=1, inplace=True)
+# dfMovies.set_index(['tconst'], inplace=True)
 
-dfMovies['genres'] = dfMovies['genres'].str.split(',')
-dfMovies = dfMovies.explode('genres')
-dfMovies = dfMovies[dfMovies.genres != 'Game-Show']
+# dfMovies['genres'] = dfMovies['genres'].str.split(',')
+# dfMovies = dfMovies.explode('genres')
+# dfMovies = dfMovies[dfMovies.genres != 'Game-Show']
 
 # LOADING TV SHOWS
-dfShows = dfTotal.loc[dfTotal['titleType'].isin(['tvSeries', 'tvMiniSeries'])]
-dfShows = dfShows[dfShows.runtimeMinutes != '\\N']
-dfShows = dfShows[dfShows.genres != '\\N']
-dfShows = dfShows[dfShows.startYear != '\\N']
-dfShows = dfShows[dfShows['numVotes'].astype(int) >= 10000]
-dfShows.endYear.replace('\\N', 2022, inplace=True)  # REMOVE IF I WANNA SCRAP THE CHANGE OF \N to 2022
+# dfShows = dfTotal.loc[dfTotal['titleType'].isin(['tvSeries', 'tvMiniSeries'])]
+# dfShows = dfShows[dfShows.runtimeMinutes != '\\N']
+# dfShows = dfShows[dfShows.genres != '\\N']
+# dfShows = dfShows[dfShows.startYear != '\\N']
+# dfShows = dfShows[dfShows['numVotes'].astype(int) >= 10000]
+# dfShows.endYear.replace('\\N', 2022, inplace=True)  # REMOVE IF I WANNA SCRAP THE CHANGE OF \N to 2022
 # Fixing the TV Shows database so that genres are split into different rows
-dfShows.drop(['originalTitle'], axis=1, inplace=True)
-dfShows.set_index(['tconst'], inplace=True)
+# dfShows.drop(['originalTitle'], axis=1, inplace=True)
+# dfShows.set_index(['tconst'], inplace=True)
 
-dfShows['genres'] = dfShows['genres'].str.split(',')
-dfShows = dfShows.explode('genres')
+# dfShows['genres'] = dfShows['genres'].str.split(',')
+# dfShows = dfShows.explode('genres')
+
+# dfShows.to_csv('dfShows.csv', index = False)
+# dfMovies.to_csv('dfMovies.csv', index = False)
+
+
+#IMPORTING DATA AFTER MANIPULATION
+dfShows = pd.read_csv('dfShows.csv')
+dfMovies = pd.read_csv('dfMovies.csv')
+
 
 # DASH -> Main page
 
 external_stylesheet = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = Dash(__name__, external_stylesheets=external_stylesheet)
-# server = app.server
+server = app.server
 
 
 # BUBBLE GRAPH UPDATING
