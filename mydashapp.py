@@ -1,5 +1,4 @@
 import pandas as pd
-# import ipywidgets as widgets
 # import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
@@ -9,9 +8,9 @@ from dash import dcc, html, Dash
 from dash.dependencies import Output, Input
 
 # IMPORTING AND MERGING THE DATA
-dfBasics = pd.read_csv('Downloads/title.basics.tsv', sep='\t', header=0)
+dfBasics = pd.read_csv('title.basics.tsv', sep='\t', header=0)
 # dfRegion = pd.read_csv('Downloads/title.akas.tsv', sep='\t', header=0)
-dfRatings = pd.read_csv('Downloads/title.ratings.tsv', sep='\t', header=0)
+dfRatings = pd.read_csv('title.ratings.tsv', sep='\t', header=0)
 
 dfTotal = pd.merge(dfBasics, dfRatings, on='tconst')
 
@@ -49,56 +48,16 @@ dfShows = dfShows.explode('genres')
 
 external_stylesheet = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-app = Dash(__name__, external_stylesheets=external_stylesheet)  # JupyterDash for here
-server = app.server
-
-app.layout = html.Div([
-
-    html.H1("IMDb Data Explorer", style={'text_align': 'center'}),
-
-    dcc.Dropdown(id='TVorMovie',
-                 options=[
-                     {'label': 'Movies', 'value': 1},  # 1 = movies
-                     {'label': 'TV Shows', 'value': 2}],
-                 style={'width': '40%'},
-                 value=1),
-
-    html.Div(id='output_container', children=[]),
-    html.Br(),
-
-    dcc.RangeSlider(1906, 2022, 1, id='year_slider', updatemode='drag',
-                    tooltip={"placement": "bottom", "always_visible": True},
-                    marks={i: '{}'.format(i) for i in range(1906, 2022, 4)},
-                    value=[1906, 2022]),
-
-    dcc.Graph(id='bubble', figure={}, config={'doubleClick': 'reset', 'showTips': True}, selectedData=None),
-
-    html.Br(),
-
-    html.Div([
-        dcc.Graph(id='violin', figure={}, config={'doubleClick': 'reset', 'showTips': True},
-                  className='six columns', style={'width': '40%'}),
-
-        dcc.Graph(id='runTime', figure={}, config={'doubleClick': 'reset', 'showTips': True},
-                  className='six columns', style={'width': '40%'}),
-
-        dcc.Graph(id='toprank', figure={}, config={'doubleClick': 'reset', 'showTips': True},
-                  className='six columns', style={'width': '40%'})
-
-    ], className='row')  # Possible to add a scroll bar?
-
-])
-
-del app.config._read_only["requests_pathname_prefix"]
-app.run_server(mode='external')
+app = Dash(__name__, external_stylesheets=external_stylesheet)
+# server = app.server
 
 
 # BUBBLE GRAPH UPDATING
 @app.callback(
-    [Output(component_id='output_container', component_property='children'),
-     Output(component_id='bubble', component_property='figure')],
-    [Input(component_id='TVorMovie', component_property='value'),
-     Input(component_id='year_slider', component_property='value')]
+    Output(component_id='output_container', component_property='children'),
+    Output(component_id='bubble', component_property='figure'),
+    Input(component_id='TVorMovie', component_property='value'),
+    Input(component_id='year_slider', component_property='value')
 )
 def update_graph(option_slct, year_slct):
     low, high = year_slct
@@ -141,9 +100,9 @@ def update_graph(option_slct, year_slct):
 # VIOLIN GRAPH UPDATING
 @app.callback(
     Output(component_id='violin', component_property='figure'),
-    [Input(component_id='TVorMovie', component_property='value'),
-     Input(component_id='year_slider', component_property='value'),
-     Input(component_id='bubble', component_property='selectedData')]
+    Input(component_id='TVorMovie', component_property='value'),
+    Input(component_id='year_slider', component_property='value'),
+    Input(component_id='bubble', component_property='selectedData')
 )
 def update_violin(option_slct, year_slct, clicked_genre):
     low, high = year_slct
@@ -181,12 +140,12 @@ def update_violin(option_slct, year_slct, clicked_genre):
 
             violin_count = dfMovies.copy()
             mask_count = (violin_count['year'].astype(int) >= low) & (violin_count['year'].astype(int) <= high) & (
-                        violin_count['genres'].astype(str) == genre)
+                    violin_count['genres'].astype(str) == genre)
         else:
 
             violin_count = dfShows.copy()
             mask_count = (violin_count['startYear'].astype(int) >= low) & (
-                        violin_count['endYear'].astype(int) <= high) & (violin_count['genres'].astype(str) == genre)
+                    violin_count['endYear'].astype(int) <= high) & (violin_count['genres'].astype(str) == genre)
 
         fig = px.violin(
             violin_count[mask_count], y='averageRating', box=True, points='all',
@@ -205,9 +164,9 @@ def update_violin(option_slct, year_slct, clicked_genre):
 
 @app.callback(
     Output(component_id='runTime', component_property='figure'),
-    [Input(component_id='TVorMovie', component_property='value'),
-     Input(component_id='year_slider', component_property='value'),
-     Input(component_id='bubble', component_property='selectedData')]
+    Input(component_id='TVorMovie', component_property='value'),
+    Input(component_id='year_slider', component_property='value'),
+    Input(component_id='bubble', component_property='selectedData')
 )
 def update_RUN(option_slct, year_slct, clicked_genre):
     low, high = year_slct
@@ -233,13 +192,13 @@ def update_RUN(option_slct, year_slct, clicked_genre):
 
             run_count = dfMovies.copy()
             mask_count = (run_count['year'].astype(int) >= low) & (run_count['year'].astype(int) <= high) & (
-                        run_count['genres'].astype(str) == genre)
+                    run_count['genres'].astype(str) == genre)
 
         else:
 
             run_count = dfShows.copy()
             mask_count = (run_count['startYear'].astype(int) >= low) & (run_count['endYear'].astype(int) <= high) & (
-                        run_count['genres'].astype(str) == genre)
+                    run_count['genres'].astype(str) == genre)
 
     run_count.runtimeMinutes = run_count.runtimeMinutes.astype(int)
     run_count2 = run_count[mask_count].sort_values(by='runtimeMinutes', ascending=True)
@@ -269,9 +228,9 @@ def update_RUN(option_slct, year_slct, clicked_genre):
 
 @app.callback(
     Output(component_id='toprank', component_property='figure'),
-    [Input(component_id='TVorMovie', component_property='value'),
-     Input(component_id='year_slider', component_property='value'),
-     Input(component_id='bubble', component_property='selectedData')]
+    Input(component_id='TVorMovie', component_property='value'),
+    Input(component_id='year_slider', component_property='value'),
+    Input(component_id='bubble', component_property='selectedData')
 )
 def update_ranks(option_slct, year_slct, clicked_genre):
     low, high = year_slct
@@ -314,14 +273,14 @@ def update_ranks(option_slct, year_slct, clicked_genre):
             minVotes = 25000
             rank_count = dfMovies.copy()
             mask_count = (rank_count['year'].astype(int) >= low) & (rank_count['year'].astype(int) <= high) & (
-                        rank_count['genres'].astype(str) == genre)
+                    rank_count['genres'].astype(str) == genre)
 
         else:
 
             minVotes = 10000
             rank_count = dfShows.copy()
             mask_count = (rank_count['startYear'].astype(int) >= low) & (rank_count['endYear'].astype(int) <= high) & (
-                        rank_count['genres'].astype(str) == genre)
+                    rank_count['genres'].astype(str) == genre)
 
         topRank = rank_count[mask_count].nlargest(10, 'averageRating')
         topRank.sort_values(by='averageRating', inplace=True)
@@ -337,3 +296,50 @@ def update_ranks(option_slct, year_slct, clicked_genre):
         )
 
     return fig
+
+
+
+
+
+app.layout = html.Div([
+
+    html.H1("IMDb Data Explorer", style={'text_align': 'center'}),
+
+    dcc.Dropdown(id='TVorMovie',
+                 options=[
+                     {'label': 'Movies', 'value': 1},  # 1 = movies
+                     {'label': 'TV Shows', 'value': 2}],
+                 style={'width': '40%'},
+                 value=1),
+
+    html.Div(id='output_container', children=[]),
+    html.Br(),
+
+    dcc.RangeSlider(1906, 2022, 1, id='year_slider', updatemode='drag',
+                    tooltip={"placement": "bottom", "always_visible": True},
+                    marks={i: '{}'.format(i) for i in range(1906, 2022, 4)},
+                    value=[1906, 2022]),
+
+    dcc.Graph(id='bubble', figure={}, config={'doubleClick': 'reset', 'showTips': True}, selectedData=None),
+
+    html.Br(),
+
+    html.Div([
+        dcc.Graph(id='violin', figure={}, config={'doubleClick': 'reset', 'showTips': True},
+                  className='six columns', style={'width': '40%'}),
+
+        dcc.Graph(id='runTime', figure={}, config={'doubleClick': 'reset', 'showTips': True},
+                  className='six columns', style={'width': '40%'}),
+
+        dcc.Graph(id='toprank', figure={}, config={'doubleClick': 'reset', 'showTips': True},
+                  className='six columns', style={'width': '40%'})
+
+    ], className='row')  # Possible to add a scroll bar?
+
+])
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
+
+
+
