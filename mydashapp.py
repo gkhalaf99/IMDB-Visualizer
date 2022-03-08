@@ -48,10 +48,9 @@ from dash.dependencies import Output, Input
 # dfMovies.to_csv('dfMovies.csv', index = False)
 
 
-#IMPORTING DATA AFTER MANIPULATION
+# IMPORTING DATA AFTER MANIPULATION
 dfShows = pd.read_csv('dfShows.csv')
 dfMovies = pd.read_csv('dfMovies.csv')
-
 
 # DASH -> Main page
 
@@ -111,9 +110,10 @@ def update_graph(option_slct, year_slct):
     Output(component_id='violin', component_property='figure'),
     Input(component_id='TVorMovie', component_property='value'),
     Input(component_id='year_slider', component_property='value'),
-    Input(component_id='bubble', component_property='selectedData')
+    Input(component_id='bubble', component_property='selectedData'),
+    Input(component_id='RateOrPop', component_property='value')
 )
-def update_violin(option_slct, year_slct, clicked_genre):
+def update_violin(option_slct, year_slct, clicked_genre, rateorpop):
     low, high = year_slct
 
     if clicked_genre is None:
@@ -133,14 +133,24 @@ def update_violin(option_slct, year_slct, clicked_genre):
             violin_av = violin_count[mask_count].groupby('genres').mean()
             violin_av.reset_index(inplace=True)
 
-        fig = px.violin(
-            violin_av, y='averageRating', box=True, points='all',
-            labels=dict(numVotes="Average Number of Votes", averageRating="Average Rating out of 10",
-                        size="Total Count", genres='Genre'), title='KDE of genres in the given years',
-            hover_name=violin_av.genres,
-            hover_data=['averageRating', 'numVotes'],
-            # template = 'plotly_dark'
-        )
+        if rateorpop == 1:
+            fig = px.violin(
+                violin_av, y='averageRating', box=True, points='all',
+                labels=dict(numVotes="Average Number of Votes", averageRating="Average Rating out of 10",
+                            size="Total Count", genres='Genre'), title='KDE of genres in the given years',
+                hover_name=violin_av.genres,
+                hover_data=['averageRating', 'numVotes'],
+                # template = 'plotly_dark'
+            )
+        else:
+            fig = px.violin(
+                violin_av, y='numVotes', box=True, points='all',
+                labels=dict(numVotes="Average Number of Votes", averageRating="Average Rating out of 10",
+                            size="Total Count", genres='Genre'), title='KDE of genres in the given years',
+                hover_name=violin_av.genres,
+                hover_data=['averageRating', 'numVotes'],
+                # template = 'plotly_dark'
+            )
     else:
 
         genre = clicked_genre['points'][0]['customdata'][0]  # How do we get multi-select?
@@ -156,15 +166,26 @@ def update_violin(option_slct, year_slct, clicked_genre):
             mask_count = (violin_count['startYear'].astype(int) >= low) & (
                     violin_count['endYear'].astype(int) <= high) & (violin_count['genres'].astype(str) == genre)
 
-        fig = px.violin(
-            violin_count[mask_count], y='averageRating', box=True, points='all',
-            labels=dict(numVotes="Total Number of Votes", averageRating="Average Rating out of 10",
-                        size="Total Count"),
-            title='KDE of the {} genre'.format(genre),
-            hover_name=violin_count[mask_count].primaryTitle,
-            hover_data=['averageRating', 'numVotes'],
-            # template = 'plotly_dark'
-        )
+        if rateorpop == 1:
+            fig = px.violin(
+                violin_count[mask_count], y='averageRating', box=True, points='all',
+                labels=dict(numVotes="Total Number of Votes", averageRating="Average Rating out of 10",
+                            size="Total Count"),
+                title='KDE of the {} genre'.format(genre),
+                hover_name=violin_count[mask_count].primaryTitle,
+                hover_data=['averageRating', 'numVotes'],
+                # template = 'plotly_dark'
+            )
+        else:
+            fig = px.violin(
+                violin_count[mask_count], y='numVotes', box=True, points='all',
+                labels=dict(numVotes="Total Number of Votes", averageRating="Average Rating out of 10",
+                            size="Total Count"),
+                title='KDE of the {} genre'.format(genre),
+                hover_name=violin_count[mask_count].primaryTitle,
+                hover_data=['averageRating', 'numVotes'],
+                # template = 'plotly_dark'
+            )
 
     return fig
 
@@ -175,9 +196,10 @@ def update_violin(option_slct, year_slct, clicked_genre):
     Output(component_id='runTime', component_property='figure'),
     Input(component_id='TVorMovie', component_property='value'),
     Input(component_id='year_slider', component_property='value'),
-    Input(component_id='bubble', component_property='selectedData')
+    Input(component_id='bubble', component_property='selectedData'),
+    Input(component_id='RateOrPop', component_property='value')
 )
-def update_RUN(option_slct, year_slct, clicked_genre):
+def update_RUN(option_slct, year_slct, clicked_genre, rateorpop):
     low, high = year_slct
 
     if clicked_genre is None:
@@ -191,8 +213,6 @@ def update_RUN(option_slct, year_slct, clicked_genre):
 
             run_count = dfShows.copy()
             mask_count = (run_count['startYear'].astype(int) >= low) & (run_count['endYear'].astype(int) <= high)
-
-
     else:
 
         genre = clicked_genre['points'][0]['customdata'][0]  # How do we get multi-select?
@@ -209,6 +229,7 @@ def update_RUN(option_slct, year_slct, clicked_genre):
             mask_count = (run_count['startYear'].astype(int) >= low) & (run_count['endYear'].astype(int) <= high) & (
                     run_count['genres'].astype(str) == genre)
 
+
     run_count.runtimeMinutes = run_count.runtimeMinutes.astype(int)
     run_count2 = run_count[mask_count].sort_values(by='runtimeMinutes', ascending=True)
     run_count = run_count2.groupby(['primaryTitle', 'runtimeMinutes'], as_index=False).mean()
@@ -219,16 +240,25 @@ def update_RUN(option_slct, year_slct, clicked_genre):
     fig0 = px.histogram(run_count2, x='runtimeMinutes')
     fig0.update_traces(yaxis='y1')
 
-    fig1 = px.line(run_count.groupby('runtimeMinutes', as_index=False).mean(),
-                   x='runtimeMinutes', y='averageRating', render_mode="webgl", )
-    fig1.update_traces(line=dict(color="#ff5733"), yaxis='y2')
+    if rateorpop == 1:
+        fig1 = px.line(run_count.groupby('runtimeMinutes', as_index=False).mean(),
+                       x='runtimeMinutes', y='averageRating', render_mode="webgl", )
+        fig1.update_traces(line=dict(color="#ff5733"), yaxis='y2')
 
-    fig.add_traces(fig0.data + fig1.data)
-    fig.layout.xaxis.title = "Runtime in Minutes"
-    fig.layout.yaxis.title = "Count"
-    # subfig.layout.yaxis2.type="log"
-    fig.layout.yaxis2.title = "Average Rating out of 10"
-    # recoloring is necessary otherwise lines from fig und fig2 would share each color
+        fig.add_traces(fig0.data + fig1.data)
+        fig.layout.xaxis.title = "Runtime in Minutes"
+        fig.layout.yaxis.title = "Count (Runtime)"
+        fig.layout.yaxis2.title = "Average Rating out of 10"
+    else:
+        fig1 = px.line(run_count.groupby('runtimeMinutes', as_index=False).mean(),
+                       x='runtimeMinutes', y='numVotes', render_mode="webgl", )
+        fig1.update_traces(line=dict(color="#ff5733"), yaxis='y2')
+
+        fig.add_traces(fig0.data + fig1.data)
+        fig.layout.xaxis.title = "Runtime in Minutes"
+        fig.layout.yaxis.title = "Count (Runtime)"
+        fig.layout.yaxis2.title = "Number of votes"
+
 
     return fig
 
@@ -239,9 +269,10 @@ def update_RUN(option_slct, year_slct, clicked_genre):
     Output(component_id='toprank', component_property='figure'),
     Input(component_id='TVorMovie', component_property='value'),
     Input(component_id='year_slider', component_property='value'),
-    Input(component_id='bubble', component_property='selectedData')
+    Input(component_id='bubble', component_property='selectedData'),
+    Input(component_id='RateOrPop', component_property='value')
 )
-def update_ranks(option_slct, year_slct, clicked_genre):
+def update_ranks(option_slct, year_slct, clicked_genre, rateorpop):
     low, high = year_slct
 
     if clicked_genre is None:
@@ -262,17 +293,30 @@ def update_ranks(option_slct, year_slct, clicked_genre):
         topRank = topRank.groupby(['primaryTitle', 'numVotes'], as_index=False).agg(
             {'averageRating': 'first', 'genres': lambda x: ','.join(x.astype(str))})
 
-        topRank = topRank.nlargest(10, 'averageRating')
-        topRank.sort_values(by='averageRating', inplace=True)
+        if rateorpop == 1:
+            topRank = topRank.nlargest(10, 'averageRating')
+            topRank.sort_values(by='averageRating', inplace=True)
 
-        fig = px.bar(
-            topRank, y='primaryTitle', x='averageRating', color='numVotes', orientation='h',
-            labels=dict(numVotes="Total Number of Votes", averageRating="Average Rating out of 10",
-                        primaryTitle="Title", genres='Genre'), title='Top 10, minimum {} votes'.format(minVotes),
-            hover_name=topRank.primaryTitle,
-            hover_data=['averageRating', 'numVotes', 'genres'],
-            # template = 'plotly_dark'
-        )
+            fig = px.bar(
+                topRank, y='primaryTitle', x='averageRating', color='numVotes', orientation='h',
+                labels=dict(numVotes="Total Number of Votes", averageRating="Average Rating out of 10",
+                            primaryTitle="Title", genres='Genre'), title='Top 10, minimum {} votes'.format(minVotes),
+                hover_name=topRank.primaryTitle,
+                hover_data=['averageRating', 'numVotes', 'genres'],
+                # template = 'plotly_dark'
+            )
+        else:
+            topPop = topRank.nlargest(10, 'numVotes')
+            topPop.sort_values(by='numVotes', inplace=True)
+
+            fig = px.bar(
+                topPop, y='primaryTitle', x='numVotes', color='averageRating', orientation='h',
+                labels=dict(numVotes="Total Number of Votes", averageRating="Average Rating out of 10",
+                            primaryTitle="Title", genres='Genre'), title='Top 10, minimum {} votes'.format(minVotes),
+                hover_name=topPop.primaryTitle,
+                hover_data=['averageRating', 'numVotes', 'genres'],
+                # template = 'plotly_dark'
+            )
     else:
 
         genre = clicked_genre['points'][0]['customdata'][0]  # How do we get multi-select?
@@ -291,23 +335,34 @@ def update_ranks(option_slct, year_slct, clicked_genre):
             mask_count = (rank_count['startYear'].astype(int) >= low) & (rank_count['endYear'].astype(int) <= high) & (
                     rank_count['genres'].astype(str) == genre)
 
-        topRank = rank_count[mask_count].nlargest(10, 'averageRating')
-        topRank.sort_values(by='averageRating', inplace=True)
+        if rateorpop == 1:
+            topRank = rank_count[mask_count].nlargest(10, 'averageRating')
+            topRank.sort_values(by='averageRating', inplace=True)
 
-        fig = px.bar(
-            topRank, y='primaryTitle', x='averageRating', color='numVotes', orientation='h',
-            labels=dict(numVotes="Total Number of Votes", averageRating="Average Rating out of 10",
-                        primaryTitle="Title", genres='Genre'),
-            title='Top 10 {}, minimum {} votes'.format(genre, minVotes),
-            hover_name=topRank.primaryTitle,
-            hover_data=['averageRating', 'numVotes'],
-            # template = 'plotly_dark'
-        )
+            fig = px.bar(
+                topRank, y='primaryTitle', x='averageRating', color='numVotes', orientation='h',
+                labels=dict(numVotes="Total Number of Votes", averageRating="Average Rating out of 10",
+                            primaryTitle="Title", genres='Genre'),
+                title='Top 10 {}, minimum {} votes'.format(genre, minVotes),
+                hover_name=topRank.primaryTitle,
+                hover_data=['averageRating', 'numVotes'],
+                # template = 'plotly_dark'
+            )
+        else:
+            topPop = rank_count[mask_count].nlargest(10, 'numVotes')
+            topPop.sort_values(by='numVotes', inplace=True)
+
+            fig = px.bar(
+                topPop, y='primaryTitle', x='numVotes', color='averageRating', orientation='h',
+                labels=dict(numVotes="Total Number of Votes", averageRating="Average Rating out of 10",
+                            primaryTitle="Title", genres='Genre'),
+                title='Top 10 {}, minimum {} votes'.format(genre, minVotes),
+                hover_name=topPop.primaryTitle,
+                hover_data=['averageRating', 'numVotes'],
+                # template = 'plotly_dark'
+            )
 
     return fig
-
-
-
 
 
 app.layout = html.Div([
@@ -318,6 +373,13 @@ app.layout = html.Div([
                  options=[
                      {'label': 'Movies', 'value': 1},  # 1 = movies
                      {'label': 'TV Shows', 'value': 2}],
+                 style={'width': '40%'},
+                 value=1),
+
+    dcc.Dropdown(id='RateOrPop',
+                 options=[
+                     {'label': 'Focus: Ratings', 'value': 1},  # 1 = movies
+                     {'label': 'Focus: Popularity', 'value': 2}],
                  style={'width': '40%'},
                  value=1),
 
@@ -335,13 +397,13 @@ app.layout = html.Div([
 
     html.Div([
         dcc.Graph(id='violin', figure={}, config={'doubleClick': 'reset', 'showTips': True},
-                  className='six columns', style={'width': '40%'}),
+                  className='six columns', style={'width': '25%'}),
 
         dcc.Graph(id='runTime', figure={}, config={'doubleClick': 'reset', 'showTips': True},
-                  className='six columns', style={'width': '40%'}),
+                  className='six columns', style={'width': '30%'}),
 
         dcc.Graph(id='toprank', figure={}, config={'doubleClick': 'reset', 'showTips': True},
-                  className='six columns', style={'width': '40%'})
+                  className='six columns', style={'width': '45%'})
 
     ], className='row')  # Possible to add a scroll bar?
 
@@ -349,6 +411,3 @@ app.layout = html.Div([
 
 if __name__ == '__main__':
     app.run_server(debug=True)
-
-
-
