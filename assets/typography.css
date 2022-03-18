@@ -2,3 +2,47 @@ body{
     background-color: #111111;
     margin: 30;
 }
+
+.rc-slider-track {
+  background-color: #e0b416;
+}
+
+.rc-slider-dot-active {
+  border-color: #e0b416;
+  border: solid 2px #e0b416;
+}
+
+.rc-slider-handle {
+  background-color: #e0b416;
+  border-color: #e0b416;
+}
+
+.rc-slider-handle:hover {
+  border-color: #e0b416;
+}
+
+.rc-slider-handle-active:active {
+  border-color: #e0b416;
+}
+.rc-slider-text {
+  color: #FFFFFF;
+}
+
+div.Select-Control {
+    color: #FFFFFF;
+}
+
+.select_box {
+    color: #e0b416 !important;
+    background-color: #111111;
+}
+
+.Select--multi > .Select-control .Select-value, .Select-placeholder {
+    color: #e0b416;
+}
+.VirtualizedSelectFocusedOption {
+    background-color: #111111;
+}
+.VirtualizedSelectOption {
+    background-color: #111111;
+}

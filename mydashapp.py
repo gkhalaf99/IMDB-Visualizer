@@ -57,7 +57,10 @@ dfShows['year'] = dfShows['startYear'].astype(str) + '-' + dfShows['endYear'].as
 
 # Main Page found below
 #external_stylesheet = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-app = Dash(__name__, external_stylesheets=[dbc.themes.MORPH])
+app = Dash(__name__, external_stylesheets=[dbc.themes.MORPH],
+           meta_tags=[{'name':'viewport', 'content':'width=device-width, initial-scale=1.0,'
+                                                   'maximum-scale=1.2, minimum-scale=0.5'}]
+           )
 server = app.server
 
 
@@ -398,97 +401,112 @@ def toggle_modal(n1, n2, is_open):
 
 
 # DASH -> Main page
-app.layout = html.Div(
+app.layout = dbc.Container(
     [
-        html.Div([
-            html.Img(src='https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/IMDB_Logo_2016.svg/2560px-IMDB_Logo_2016.svg.png',
-                     style={'display': 'inline-block',
-                            'width':'4%',
-                            'height':'auto',
-                            'vertical-align':'center'}),
-            html.H1("   Data Explorer", style={
-                'text_align': 'center',
-                'color': '#e0b416',
-                'display': 'inline-block',
-                'vertical-align':'bottom'})
+        dbc.Row([
+             #dbc.Col([
+             #  html.Img(src='https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/IMDB_Logo_2016.svg/2560px-IMDB_Logo_2016.svg.png',
+             #            style={'display': 'inline-block',
+             #                   'height':'auto',
+             #                   'object-fit':'contain',
+             #                   'vertical-align':'center'}),
+             #    ],width = 3, align = 'start'),
+             dbc.Col([
+                html.H1("IMDb Data Explorer", className='text-center', style={
+                    #'text_align': 'center',
+                    'color': '#e0b416',
+                    })
+                 ],width = 12),
         ]),
 
-        dbc.Button("Info", id="open", n_clicks=0, color='warning', active = True, className='me-1'),
-        dbc.Modal(
-            [
-                dbc.ModalHeader(dbc.ModalTitle("Page Information"), close_button=False, style={'color':'white'}),
-                dbc.ModalBody('Welcome to the IMDb Visualization! '
-                              ''
-                              'All data used is sourced from IMDb\'s datasets. Those used were last updated '
-                              'February 2022. Entries were filtered by a minimum number of '
-                              'votes in accordance with IMDb ranking lists. '
+        dbc.Row([
+            dbc.Col([
+                dcc.Dropdown(id='TVorMovie',
+                             options=[
+                                 {'label': 'Movies', 'value': 1},  # 1 = movies
+                                 {'label': 'TV Shows', 'value': 2}],
+                             clearable=False,
+                             style={'backgroundColor':'#e0b416', 'border-color':'#e0b416',
+                                    'color':'#FFFFFF'},
+                             value=1, className = 'select_box'),
+                ], width=3, align='center', style={'color':'white'}),
+            dbc.Col([
+                dcc.Dropdown(id='RateOrPop',
+                             options=[
+                                 {'label': 'Focus: Ratings', 'value': 1},  # 1 = movies
+                                 {'label': 'Focus: Popularity', 'value': 2}],
+                             clearable=False,
+                             style={
+                                    'background-color':'#e0b416',
+                                    'border-color':'#e0b416','color':'#FFFFFF'
+                                    },
+                             value=1, className = 'select_box'),
+                ], width=3, align='center'),
+            dbc.Col([
+                dbc.Button("Info", id="open", n_clicks=0, color='warning', active = True,
+                           className='me-1', style={'height':'25%'}),
+                dbc.Modal(
+                    [
+                        dbc.ModalHeader(dbc.ModalTitle("Page Information"), close_button=False, style={'color':'white'}),
+                        dbc.ModalBody('Welcome to the IMDb Visualization! '
+                                      ''
+                                      'All data used is sourced from IMDb\'s datasets. '
+                                      'Please note that I am NOT affiliated with IMDb!! '
+                                      'Datasets used were updated in February 2022. '
+                                      'Entries were filtered by a minimum number of '
+                                      'votes in accordance with IMDb ranking lists. '
 
-                              'Use the main bubble graph to modify the page. The size of the bubbles '
-                              'represent the number of movies or shows released from that genre within the '
-                              'given year range. Double click a bubble to filter the page '
-                              'by the chosen genre. Double click it again to unselect. All figures can be '
-                              'zoomed into, cropped, and hovered. '
-                              ''
-                              'At the top you may switch between looking at movies or TV shows, and whether'
-                              'you want to focus on the ratings, or the number of ratings (popularity).'
-                              ''),
-                dbc.ModalFooter(
-                    dbc.Button(
-                        'Close', id="close", className='ms-auto', color='dark', n_clicks=0
-                    )
+                                      'Use the main bubble graph to modify the page. The size of the bubbles '
+                                      'represent the number of movies or shows released from that genre within the '
+                                      'given year range. Double click a bubble to filter the page '
+                                      'by the chosen genre. Double click it again to unselect. All figures can be '
+                                      'zoomed into, cropped, and hovered. '
+                                      ''
+                                      'At the top you may switch between looking at movies or TV shows, and whether '
+                                      'you want to focus on the ratings, or the number of ratings (popularity).'
+                                      ''),
+                        dbc.ModalFooter(
+                            dbc.Button(
+                                'Close', id="close", className='ms-auto', color='dark', n_clicks=0
+                            )
+                        ),
+                    ],
+                    id='modal',
+                    is_open=False,
+                    size='lg',
+                    autofocus= True,
                 ),
-            ],
-            id='modal',
-            is_open=False,
-            size='lg',
-            autofocus= True,
-        ),
-
-        dcc.Dropdown(id='TVorMovie',
-                     options=[
-                         {'label': 'Movies', 'value': 1},  # 1 = movies
-                         {'label': 'TV Shows', 'value': 2}],
-                     clearable=False,
-                     style={'width': '25%', 'backgroundColor':'#111111', 'border-color':'#e0b416',
-                            'color':'#FFFFFF'},
-                     value=1),
-
-        dcc.Dropdown(id='RateOrPop',
-                     options=[
-                         {'label': 'Focus: Ratings', 'value': 1},  # 1 = movies
-                         {'label': 'Focus: Popularity', 'value': 2}],
-                     clearable=False,
-                     style={'width': '25%',
-                            #'background-color':'#111111',
-                            'border-color':'#e0b416','color':'#111111'
-                            },
-                     value=1),
+                ], width ={'size':3, 'offset':3}, align='center'),
+            ], style={'padding':2}),
 
         html.Div(id='output_container', children=[], style={'backgroundColor': '#111111'}),
-        html.Br(),
 
         dcc.RangeSlider(1906, 2022, 1, id='year_slider', updatemode='drag',
                         tooltip={"placement": "bottom", "always_visible": True},
-                        marks={i: '{}'.format(i) for i in range(1906, 2022, 4)},
-                        value=[1906, 2022]),
+                        marks={i: '{}'.format(i) for i in range(1906, 2022, 12)},
+                        value=[1906, 2022],
+                        ),
 
-        dcc.Graph(id='bubble', figure={}, config={'doubleClick': 'reset', 'showTips': True}, selectedData=None),
-
+        dbc.Row([
+           dbc.Col([
+               dcc.Graph(id='bubble', figure={}, config={'doubleClick': 'reset', 'showTips': True}, selectedData=None),
+           ],xs=12,lg=8),
+           dbc.Col([
+               dcc.Graph(id='violin', figure={}, config={'doubleClick': 'reset', 'showTips': True},
+                         className='six columns',  #style={'width': '25%'}
+                         ),
+           ],xs=12,lg=4),
+        ]),
         html.Br(),
 
-        html.Div([
-            dcc.Graph(id='violin', figure={}, config={'doubleClick': 'reset', 'showTips': True},
-                      className='six columns', style={'width': '25%'}),
-
-            dcc.Graph(id='runTime', figure={}, config={'doubleClick': 'reset', 'showTips': True},
-                      className='six columns', style={'width': '30%'}),
-
-            dcc.Graph(id='toprank', figure={}, config={'doubleClick': 'reset', 'showTips': True},
-                      className='six columns', style={'width': '45%'})
-
-        ], className='row', style={'backgroundColor': '#111111'}
-        )  # Possible to add a scroll bar?
-
+        dbc.Row([
+            dbc.Col([
+                dcc.Graph(id='runTime', figure={}, config={'doubleClick': 'reset', 'showTips': True},),
+                ],xs=12,lg=4,xl=5),
+            dbc.Col([
+                dcc.Graph(id='toprank', figure={}, config={'doubleClick': 'reset', 'showTips': True},),
+            ],xs=12,lg=8, xl=7),
+        ]),
     ],
     style={'backgroundColor': '#111111',
            'color': '#FFFFFF'}
