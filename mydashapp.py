@@ -115,7 +115,7 @@ def update_graph(option_slct, year_slct):
         hover_name=bubble_count[mask_count].groupby('genres').genres.first(),
         custom_data=[bubble_count[mask_count].groupby('genres').genres.first()],
         labels=dict(numVotes="Average Number of Votes", averageRating="Average Rating out of 10",
-                    size="Total Count", color='Genre'),
+                    size="Number of releases", color='Genre'),
         log_x=False, size_max=65,
         title='Number of votes vs Average Rating out of 10 Filtered by Genre and/or Year(s)',
         template='plotly_dark'
@@ -268,7 +268,7 @@ def update_RUN(option_slct, year_slct, clicked_genre, rateorpop):
         fig.add_traces(fig0.data + fig1.data)
         fig.layout.title = 'Runtime Trends'
         fig.layout.xaxis.title = "Runtime in Minutes"
-        fig.layout.yaxis.title = "Count (Runtime)"
+        fig.layout.yaxis.title = "Count"
         fig.layout.yaxis2.title = "Average Rating out of 10"
     else:
         fig1 = px.line(run_count.groupby('runtimeMinutes', as_index=False).mean(),
@@ -278,7 +278,7 @@ def update_RUN(option_slct, year_slct, clicked_genre, rateorpop):
         fig.add_traces(fig0.data + fig1.data)
         fig.layout.title = 'Runtime Trends'
         fig.layout.xaxis.title = "Runtime in Minutes"
-        fig.layout.yaxis.title = "Count (Runtime)"
+        fig.layout.yaxis.title = "Count"
         fig.layout.yaxis2.title = "Number of votes"
 
     return fig
@@ -447,34 +447,50 @@ app.layout = dbc.Container(
                            className='me-1', style={'height':'25%'}),
                 dbc.Modal(
                     [
-                        dbc.ModalHeader(dbc.ModalTitle("Page Information"), close_button=False, style={'color':'white'}),
+                        dbc.ModalHeader(dbc.ModalTitle("Page Information", style={'color':'#e0b416'}), close_button=False,
+                                        style={'background-color':'black', 'color':'white'}),
                         dbc.ModalBody('Welcome to the IMDb Visualization! '
-                                      ''
-                                      'All data used is sourced from IMDb\'s datasets. '
-                                      'Please note that I am NOT affiliated with IMDb!! '
+                                      '\n'
+                                      '\nAll data used is sourced from IMDb\'s datasets. '
+                                      'Please note that I am not affiliated with IMDb. '
                                       'Datasets used were updated in February 2022. '
                                       'Entries were filtered by a minimum number of '
                                       'votes in accordance with IMDb ranking lists. '
-
-                                      'Use the main bubble graph to modify the page. The size of the bubbles '
-                                      'represent the number of movies or shows released from that genre within the '
-                                      'given year range. Double click a bubble to filter the page '
-                                      'by the chosen genre. Double click it again to unselect. All figures can be '
-                                      'zoomed into, cropped, and hovered. '
-                                      ''
-                                      'At the top you may switch between looking at movies or TV shows, and whether '
+                                      '\nAt the top you may switch between looking at movies or TV shows, and whether '
                                       'you want to focus on the ratings, or the number of ratings (popularity).'
-                                      ''),
+                                      ' You may open this dialogue again by clicking the info button on the top right.'
+                                      '\n'
+                                      '\n'
+                                      'Bubble Graph:'
+                                      '\nUse the main bubble graph to modify the page. The size of the bubbles '
+                                      'represent the number of movies or shows released from that genre within the '
+                                      'given year range. Click a bubble to filter the page '
+                                      'by the chosen genre. Click it again to unselect. Click genres on the legend'
+                                      ' on the right to hide bubbles, or double click to isolate. The figure Can be zoomed into.'
+                                      '\n'
+                                      '\n'
+                                      'KDE chart:'
+                                      '\nThis chart shows the estimated distribution based on. It can essentially be looked'
+                                      ' at as a vertical, double-sided approximate histogram. The individual points are '
+                                      'shown on its left.'
+                                      '\n'
+                                      '\n'
+                                      'Runtime and Bar:'
+                                      '\nFurther below is the runtime histogram with a rating/votes trendline, and a bar '
+                                      'chart of the highest ranking filtered movies or TV shows.'
+                                      '', style={'background-color':'black', 'color':'white'}),
                         dbc.ModalFooter(
                             dbc.Button(
-                                'Close', id="close", className='ms-auto', color='dark', n_clicks=0
-                            )
+                                'Close', id="close", className='ms-auto', color='dark', n_clicks=0,
+                                style={'background-color':'#e0b416', 'color':'black'}
+                            ), style={'background-color':'black', 'color':'white'}
                         ),
                     ],
                     id='modal',
-                    is_open=False,
+                    is_open=True,
                     size='lg',
                     autofocus= True,
+                    style={'white-space': 'pre-line'}
                 ),
                 ], width ={'size':3, 'offset':3}, align='center'),
             ], style={'padding':2}),
