@@ -219,10 +219,13 @@ def update_violin(option_slct, year_slct, clicked_genre, rateorpop):
     Input(component_id='TVorMovie', component_property='value'),
     Input(component_id='year_slider', component_property='value'),
     Input(component_id='bubble', component_property='selectedData'),
-    Input(component_id='RateOrPop', component_property='value')
+    Input(component_id='RateOrPop', component_property='value'),
+    Input(component_id='Runtime Encoding', component_property='value')
 )
-def update_RUN(option_slct, year_slct, clicked_genre, rateorpop):
+def update_RUN(option_slct, year_slct, clicked_genre, rateorpop, encoding):
     low, high = year_slct
+
+    enc = encoding
 
     if clicked_genre is None:
 
@@ -260,26 +263,53 @@ def update_RUN(option_slct, year_slct, clicked_genre, rateorpop):
     fig0 = px.histogram(run_count2, x='runtimeMinutes', template='plotly_dark', color_discrete_sequence=['#e0b416'])
     fig0.update_traces(yaxis='y1')
 
-    if rateorpop == 1:
-        fig1 = px.line(run_count.groupby('runtimeMinutes', as_index=False).mean(),
-                       x='runtimeMinutes', y='averageRating', render_mode="webgl", template='plotly_dark')
-        fig1.update_traces(line=dict(color="#e25681"), yaxis='y2')
+    if enc == 1:
+        if rateorpop == 1:
+            fig1 = px.line(run_count.groupby('runtimeMinutes', as_index=False).mean(),
+                           x='runtimeMinutes', y='averageRating', render_mode="webgl", template='plotly_dark')
+            fig1.update_traces(line=dict(color="#e25681"), yaxis='y2')
 
-        fig.add_traces(fig0.data + fig1.data)
-        fig.layout.title = 'Runtime Trends'
-        fig.layout.xaxis.title = "Runtime in Minutes"
-        fig.layout.yaxis.title = "Count"
-        fig.layout.yaxis2.title = "Average Rating out of 10"
+            fig.add_traces(fig0.data + fig1.data)
+            fig.layout.title = 'Runtime Trends'
+            fig.layout.xaxis.title = "Runtime in Minutes"
+            fig.layout.yaxis.title = "Count"
+            fig.layout.yaxis2.title = "Average Rating out of 10"
+        else:
+            fig1 = px.line(run_count.groupby('runtimeMinutes', as_index=False).mean(),
+                           x='runtimeMinutes', y='numVotes', render_mode="webgl", template='plotly_dark')
+            fig1.update_traces(line=dict(color="#e25681"), yaxis='y2')
+
+            fig.add_traces(fig0.data + fig1.data)
+            fig.layout.title = 'Runtime Trends'
+            fig.layout.xaxis.title = "Runtime in Minutes"
+            fig.layout.yaxis.title = "Count"
+            fig.layout.yaxis2.title = "Number of votes"
+
     else:
-        fig1 = px.line(run_count.groupby('runtimeMinutes', as_index=False).mean(),
-                       x='runtimeMinutes', y='numVotes', render_mode="webgl", template='plotly_dark')
-        fig1.update_traces(line=dict(color="#e25681"), yaxis='y2')
+        if rateorpop == 1:
+            fig1 = px.scatter(run_count.groupby('runtimeMinutes', as_index=False).mean(),
+                           x='runtimeMinutes', y='averageRating', render_mode="webgl", template='plotly_dark',
+                              color_discrete_sequence=['#e25681'])
+            fig1.update_traces(yaxis='y2')
 
-        fig.add_traces(fig0.data + fig1.data)
-        fig.layout.title = 'Runtime Trends'
-        fig.layout.xaxis.title = "Runtime in Minutes"
-        fig.layout.yaxis.title = "Count"
-        fig.layout.yaxis2.title = "Number of votes"
+            fig.add_traces(fig0.data + fig1.data)
+            fig.layout.title = 'Runtime Trends'
+            fig.layout.xaxis.title = "Runtime in Minutes"
+            fig.layout.yaxis.title = "Count"
+            fig.layout.yaxis2.title = "Average Rating out of 10"
+
+        else:
+            fig1 = px.scatter(run_count.groupby('runtimeMinutes', as_index=False).mean(),
+                           x='runtimeMinutes', y='numVotes', render_mode="webgl", template='plotly_dark',
+                              color_discrete_sequence=['#e25681'])
+            fig1.update_traces(yaxis='y2')
+
+            fig.add_traces(fig0.data + fig1.data)
+            fig.layout.title = 'Runtime Trends'
+            fig.layout.xaxis.title = "Runtime in Minutes"
+            fig.layout.yaxis.title = "Count"
+            fig.layout.yaxis2.title = "Number of votes"
+
 
     return fig
 
@@ -470,14 +500,18 @@ app.layout = dbc.Container(
                                       '\n'
                                       '\n'
                                       'KDE chart:'
-                                      '\nThis chart shows the estimated distribution based on. It can essentially be looked'
-                                      ' at as a vertical, double-sided approximate histogram. The individual points are '
+                                      '\nThis chart shows the estimated density distribution based on the settings selected. It can essentially be looked'
+                                      ' at as a vertical, double-sided approximated histogram. The individual points are '
                                       'shown on its left.'
                                       '\n'
                                       '\n'
-                                      'Runtime and Bar:'
-                                      '\nFurther below is the runtime histogram with a rating/votes trendline, and a bar '
-                                      'chart of the highest ranking filtered movies or TV shows.'
+                                      'Runtime histogram:'
+                                      '\nBeside the KDE chart is the runtime histogram. This shows the count of different runtimes based on the selected settings. '
+                                      'With the histogram is a trendline, that you may choose to turn into a scatterplot instead using the dropdown beside it.'
+                                      '\n'
+                                      '\n'
+                                      'Rankings Bar Chart'
+                                      '\nFinally, the bottom shows the top 10 rankings based on the selected settings.'
                                       '', style={'background-color':'black', 'color':'white'}),
                         dbc.ModalFooter(
                             dbc.Button(
@@ -506,23 +540,38 @@ app.layout = dbc.Container(
         dbc.Row([
            dbc.Col([
                dcc.Graph(id='bubble', figure={}, config={'doubleClick': 'reset', 'showTips': True}, selectedData=None),
-           ],xs=12,lg=8),
-           dbc.Col([
-               dcc.Graph(id='violin', figure={}, config={'doubleClick': 'reset', 'showTips': True},
-                         className='six columns',  #style={'width': '25%'}
-                         ),
-           ],xs=12,lg=4),
+           ],xs=12,lg=12),
         ]),
         html.Br(),
 
         dbc.Row([
             dbc.Col([
+                dcc.Graph(id='violin', figure={}, config={'doubleClick': 'reset', 'showTips': True},
+                          className='six columns',  #style={'width': '25%'}
+                          ),
+            ],xs=12,lg=5),
+
+            dbc.Col([
                 dcc.Graph(id='runTime', figure={}, config={'doubleClick': 'reset', 'showTips': True},),
-                ],xs=12,lg=4,xl=5),
+                ],xs=11,lg=6,),
+
+            dbc.Col([
+                dcc.Dropdown(id='Runtime Encoding',
+                             options=[
+                                 {'label': 'Line', 'value': 1},  # 1 = movies
+                                 {'label': 'Points', 'value': 2}],
+                             clearable=False,
+                             style={'backgroundColor':'#e0b416', 'border-color':'#e0b416',
+                                    'color':'#FFFFFF'},
+                             value=1, className = 'select_enc'),
+            ], width=1, align='center', style={'color':'white'}),
+        ]),
+
+        dbc.Row([
             dbc.Col([
                 dcc.Graph(id='toprank', figure={}, config={'doubleClick': 'reset', 'showTips': True},),
-            ],xs=12,lg=8, xl=7),
-        ]),
+            ],xs=12,lg=12),
+        ])
     ],
     style={'backgroundColor': '#111111',
            'color': '#FFFFFF'}
